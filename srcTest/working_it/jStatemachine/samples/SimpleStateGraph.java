@@ -6,7 +6,7 @@ import working_it.jStatemachine.domain.Guard;
 import working_it.jStatemachine.domain.State;
 import working_it.jStatemachine.domain.StateGraph;
 import working_it.jStatemachine.domain.Transition;
-import working_it.jStatemachine.execute.Statemachine;
+import working_it.jStatemachine.processing.Statemachine;
 
 public class SimpleStateGraph extends StateGraph<SimpleContext> {
 	
@@ -31,6 +31,7 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 		State finish = new State("finish");
 		
 		setInitState(init);
+		
 		// Transitions
 		from(init).to(off);
 		
