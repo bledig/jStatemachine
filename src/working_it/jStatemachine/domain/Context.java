@@ -5,13 +5,21 @@ import org.apache.commons.logging.LogFactory;
 
 import working_it.jStatemachine.processing.ProcessingState;
 
+/**
+ * This is the context (enviroment) for a running statemachine.
+ * The current context-instance is injected in every Guard-validation and 
+ * Action-execute.
+ * 
+ * This Class can extend with own custom Data.
+ */
 public class Context {
 	
 	private static Log log = LogFactory.getLog(Context.class);
 	private ProcessingState processingState;
 	
 	/**
-	 * add event to event-queue
+	 * Add event to local event-queue.
+	 * This event is later processed in the current statemachine
 	 * @param newEvent
 	 */
 	public void addEvent(Object newEvent) {
@@ -22,8 +30,9 @@ public class Context {
 	}
 
 	/**
-	 * anfuegen eines Events an die Event-List  zur Weiterverarbeitung beim Aufrufenden
-	 * (also der Events, die nicht in der lokalen Statemachine verarbeitet werden sollen)
+	 * Add event to the global event-queue.
+	 * The even reperesents a Result and was sent to the global event handler.
+	 * This event are NOT processed in the current statemachine
 	 * @param resultEvent
 	 */
 	public void addGlobalEvent(Object resultEvent) {
@@ -31,11 +40,19 @@ public class Context {
 	}
 	
 	
-
+	/**
+	 * Returns the current event
+	 * @return the event-object
+	 */
 	public Object currentEvent() {
 		return processingState.currentEvent();
 	}
 
+	
+	/**
+	 * Setter for Processing-State
+	 * @param processingState
+	 */
 	public void setProcessingState(ProcessingState processingState) {
 		this.processingState = processingState;
 	}

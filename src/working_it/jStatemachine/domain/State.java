@@ -8,48 +8,51 @@ import java.util.List;
 
 
 /**
- * @author bernd
- *
+ * The State of a Stategraph
  */
-public class State {
+public class State extends PseudoState {
 	
-	private final String name;
-	private List<Transition> transitions = new ArrayList<Transition>();
+
 	private List<Action> entryActions = new ArrayList<Action>();
 	private List<Action> exitActions = new ArrayList<Action>();
 
 	/**
-	 * @param name
+	 * Constructor
+	 * @param name	uniq name
 	 */
-	public State(String name) {
-		super();
-		this.name = name;
+	public State(Enum name) {
+		super(name);
 	}
+
 	
-	
-	public <ConcretContext extends Context> void addTransition(Transition<ConcretContext> transition) {
-		transitions.add(transition);
-	}
-	
+	/**
+	 * Add a Action to the entryActions-List.
+	 * This Actions are called, when enter this state 
+	 * 
+	 * @param <ConcretContext>	the concret context class
+	 * @param entryAction		the Action
+	 * @return self
+	 */
 	public <ConcretContext extends Context> State addEntryAction(Action<ConcretContext> entryAction){
 		entryActions.add(entryAction);
 		return this;
 	}
 	
+
+	/**
+	 * Add a Action to the exitActions-List.
+	 * This Actions are called, when exit this state 
+	 * 
+	 * @param <ConcretContext>	the concret context class
+	 * @param exitAction		the Action
+	 * @return self
+	 */
 	public <ConcretContext extends Context> State addExitAction(Action<ConcretContext> exitAction){
 		exitActions.add(exitAction);
 		return this;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public List<Transition> getTransitions() {
-		return transitions;
-	}
-
-
+	
 	public List<Action> getEntryActions() {
 		return entryActions;
 	}
