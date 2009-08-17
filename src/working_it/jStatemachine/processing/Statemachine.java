@@ -19,7 +19,7 @@ import working_it.jStatemachine.domain.Transition;
 /**
  * This Statemachine runs on concret Stategraph
  */
-public class Statemachine<ConcretContext extends Context> {
+public class Statemachine <ConcretContext extends Context>{
 
 	private static Log log = LogFactory.getLog(Statemachine.class);
 	
@@ -34,33 +34,30 @@ public class Statemachine<ConcretContext extends Context> {
 	/**
 	 * Constructor
 	 * @param stateGraph the concrete StateGraph-Instance on this machine runs
+	 * @param context thr concrete context class for this machine
+	 * @param currentState the currentState, if this null, thenn initState of the graph is used.
 	 */
-	public Statemachine(StateGraph<ConcretContext> stateGraph) {
+	public Statemachine(StateGraph<ConcretContext> stateGraph, ConcretContext context, State currentState ) {
 		super();
 		this.stateGraph = stateGraph;
-	}
-	
-	
-	/**
-	 * Starts the machine doing:
-	 *   - set the currentState to the InitState og the Stategraph if not set
-	 *   - walk during graph for all event-less transitions
-	 *   - inject ProcessingState(with event-queue) in the context
-	 *   
-	 * @param context	the currentContext for the guards and actions
-	 * @return
-	 */
-	public State start(ConcretContext context){
+		this.context = context;
 		if(currentState==null) {
 			currentState = stateGraph.getInitState();
 			if(currentState==null)
 				throw new IllegalStateException("No initial-state defined in Stategraph!");
 		}
-		this.context = context;
-		context.setProcessingState(processingState);
-		walkGraph(null); // alle Event-losen Transitionen abarbeiten
-		return (State) currentState;
+		this.currentState = currentState;
 	}
+	
+	/**
+	 * Constructor
+	 * @param stateGraph the concrete StateGraph-Instance on this machine runs
+	 * @param context thr concrete context class for this machine
+	 */
+	public Statemachine(StateGraph<ConcretContext> stateGraph, ConcretContext context ) {
+		this(stateGraph, context, null);
+	}
+	
 
 	
 	/**
@@ -73,6 +70,11 @@ public class Statemachine<ConcretContext extends Context> {
 			throw new IllegalStateException("No current-state set!");
 		
 		log.info("handleEvent: "+currentState+" event="+event);
+		
+		context.setProcessingState(processingState);
+		
+		// im Vorfeld alle Event-losen Transitionen abarbeiten
+		walkGraph(null); 
 		
 		processingState.addEvent(event);
 		while(processingState.hasEvent()) {
@@ -92,12 +94,27 @@ public class Statemachine<ConcretContext extends Context> {
 		
 		boolean isFired = false;
 		for (Transition<ConcretContext> transition : currentState.getTransitions()) {
-			if(event==null && transition.getEvent()!=null)
+			
+			// Event checken
+			if(event==null && transition.getEvent()!=null) {
 				continue;
-			if(transition.getEvent()!=null && !transition.getEvent().equals(event))
-				continue;
+			} else if(transition.getEvent()!=null) {
+				// if event a String or enum, then event-Instance must be equals with given event,
+				// otherwise the event-Class must be equals
+				if(transition.hasSimpleEvent()) {
+					 if(!transition.getEvent().equals(event)) {
+						 continue;
+					 }
+				} else if(!transition.getEvent().equals(event.getClass())) {
+					continue;
+				}
+			}
+			
+			// Guard checken
 			if(transition.getGuard()!=null && !transition.getGuard().validate(context))
 				continue;
+			
+			
 			PseudoState newState = transition.getToState();
 			
 			log.info("transition '"+currentState+"' => '"+newState+"' fired");
@@ -151,6 +168,10 @@ public class Statemachine<ConcretContext extends Context> {
 
 	public void setCurrentState(Enum currentStateName) {
 		this.currentState = stateGraph.getState(currentStateName);
+	}
+
+	public void setContext(ConcretContext context) {
+		this.context = context;
 	}
 
 }

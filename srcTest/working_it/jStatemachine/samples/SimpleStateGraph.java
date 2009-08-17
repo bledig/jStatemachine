@@ -14,12 +14,32 @@ import static working_it.jStatemachine.samples.SimpleChoices.*;
 
 public class SimpleStateGraph extends StateGraph<SimpleContext> {
 	
+	// same own guard-, action- and event-classes
+	
 	class CounterCheckGuard implements Guard<SimpleContext> {
 		@Override
 		public boolean validate(SimpleContext context) {
 			return context.counter < 3;
 		}
 	}
+	
+	class CounterIncrement implements Action<SimpleContext> {
+		@Override
+		public void execute(SimpleContext context) {
+			context.counter++;
+		}
+	}
+	
+	public static class CoolEvent {
+		public final String coolingMedium;
+
+		public CoolEvent(String coolingMedium) {
+			super();
+			this.coolingMedium = coolingMedium;
+		}
+	}
+
+	
 	
 	public SimpleStateGraph() {
 		super();
@@ -45,20 +65,14 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 		from(ON).onEvent("click").to(SimpleStates.OFF);
 		from(OFF).onEvent("click").toChoice(COUNTER_CHECK);
 		
-		fromChoice(COUNTER_CHECK).to(ON)
-			.guard(new CounterCheckGuard())
-			.withAction(new Action<SimpleContext>() {
-			@Override
-			public void execute(SimpleContext context) {
-				context.counter++;
-			}
-		});
+		fromChoice(COUNTER_CHECK).to(ON).guard(new CounterCheckGuard()).withAction(new CounterIncrement());
+		fromChoice(COUNTER_CHECK).to(HOT).guardElse();
 		
-		fromChoice(COUNTER_CHECK).guardElse().to(HOT);
-		from(HOT).onEvent("click").to(HOT).withAction(new Action<SimpleContext>() {
+		from(HOT).onEvent("click").to(HOT).withAction(new CounterIncrement());
+		from(HOT).onEvent(CoolEvent.class).to(OFF).withAction(new Action<SimpleContext>() {
 			@Override
 			public void execute(SimpleContext context) {
-				context.counter++;
+				context.counter = 0;
 			}
 		});
 		from(HOT).to(FINISH).guard(new Guard<SimpleContext>() {
@@ -74,8 +88,7 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 	public static void main(String[] args) {
 		SimpleStateGraph graph = new SimpleStateGraph();
 		SimpleContext context = new SimpleContext();
-		Statemachine<SimpleContext> sm = new Statemachine<SimpleContext>(graph);
-		sm.start(context);
+		Statemachine<SimpleContext> sm = new Statemachine<SimpleContext>(graph, context);
 		sm.handleEvent("click");
 		sm.handleEvent("click");
 		sm.handleEvent("click");

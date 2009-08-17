@@ -73,6 +73,8 @@ public class Transition<ConcretContext extends Context> {
 		if(this.event!=null)
 			throw new IllegalStateException("Event already defined!");
 		this.event = event;
+		if(!hasSimpleEvent() && !(event instanceof Class))
+			throw new IllegalStateException("Event is not a String, Enum or Class!");
 		return this;
 	}
 
@@ -130,6 +132,15 @@ public class Transition<ConcretContext extends Context> {
 		return this;
 	}
 	
+
+	/**
+	 * SimpleEvent is true if the event a String or enum. 
+	 * @return 
+	 */
+	public boolean hasSimpleEvent() {
+		return (event instanceof Enum) || (event instanceof String);
+	}
+
 
 	public PseudoState getFromState() {
 		return fromState;
