@@ -146,13 +146,26 @@ abstract public class StateGraph<ConcretContext extends Context> {
 					|| (t.getActionList() != null && !t.getActionList().isEmpty())) {
 
 				sb.append("[fontsize=\"9\", label=\"");
-				if (t.getEvent() != null)
-					sb.append(t.hasSimpleEvent() ? t.getEvent()
-							: ((Class) t.getEvent()).getSimpleName());
+				
+				// Event
+				if (t.getEvent() != null) {
+					if(t.hasSimpleEvent()) {
+						sb.append(t.getEvent());
+					} else {
+						String n =  ((Class)t.getEvent()).getSimpleName();
+						if(n.startsWith("Event"))
+							n = n.replaceFirst("Event", "");
+						sb.append(n);
+					}
+				}
+				
+				// Guard
 				if (t.getGuard() != null)
 					sb.append(" [" + t.getGuard().getName() + "]");
 				else if (t.getFromState() instanceof Choice)
 					sb.append("[else]");
+				
+				// Action
 				if (t.getActionList() != null
 						&& !t.getActionList().isEmpty()) {
 					boolean first = true;
