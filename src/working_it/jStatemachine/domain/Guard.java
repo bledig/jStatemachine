@@ -15,4 +15,10 @@ public interface Guard<ConcretContext extends Context> {
 	 */
 	public boolean validate(ConcretContext context);
 
+	/**
+	 * 
+	 * @return a short-Name (Label-Description) for the guard
+	 */
+	public String getName();
+
 }

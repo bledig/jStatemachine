@@ -13,4 +13,10 @@ public interface Action<ConcretContext extends Context> {
 	 */
 	public void execute(ConcretContext context);
 
+	/**
+	 * 
+	 * @return a short-Name (Label-Description) for the action
+	 */
+	public String getName();
+
 }

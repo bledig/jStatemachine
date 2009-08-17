@@ -1,5 +1,7 @@
 package working_it.jStatemachine.samples;
 
+import java.io.IOException;
+
 import working_it.jStatemachine.domain.Action;
 import working_it.jStatemachine.domain.Choice;
 import working_it.jStatemachine.domain.Context;
@@ -21,6 +23,7 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 		public boolean validate(SimpleContext context) {
 			return context.counter < 3;
 		}
+		@Override public String getName() { return "counter<3"; }
 	}
 	
 	class CounterIncrement implements Action<SimpleContext> {
@@ -28,6 +31,7 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 		public void execute(SimpleContext context) {
 			context.counter++;
 		}
+		@Override public String getName() { return "++counter"; }
 	}
 	
 	public static class CoolEvent {
@@ -49,12 +53,13 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 			public void execute(SimpleContext context) {
 				System.out.println("Ich bin An zum "+context.counter+". mal");
 			}
+			@Override public String getName() { return "Light ON"; }
 		});
 		state(ON).addExitAction(new Action<SimpleContext>() {
-			@Override
-			public void execute(SimpleContext context) {
+			@Override public void execute(SimpleContext context) { 
 				System.out.println("Ich bin ausgeschalten wurden");
 			}
+			@Override public String getName() { return "Light OFF"; }
 		});
 		
 		setInitState(INIT);
@@ -70,23 +75,23 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 		
 		from(HOT).onEvent("click").to(HOT).withAction(new CounterIncrement());
 		from(HOT).onEvent(CoolEvent.class).to(OFF).withAction(new Action<SimpleContext>() {
-			@Override
-			public void execute(SimpleContext context) {
-				context.counter = 0;
-			}
+			@Override public void execute(SimpleContext context) { context.counter = 0; }
+			@Override public String getName() { return "counter=0"; }
 		});
 		from(HOT).to(FINISH).guard(new Guard<SimpleContext>() {
-			@Override
-			public boolean validate(SimpleContext context) {
-				return context.counter > 4;
-			}
+			@Override public boolean validate(SimpleContext context) { return context.counter > 4; }
+			@Override public String getName() { return "counter>4"; }
 		});
 	}
 
 	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		SimpleStateGraph graph = new SimpleStateGraph();
+		
+		System.out.println(graph.makeGraphiz());
+		graph.makeGraphizPng("srcTest");
+		
 		SimpleContext context = new SimpleContext();
 		Statemachine<SimpleContext> sm = new Statemachine<SimpleContext>(graph, context);
 		sm.handleEvent("click");
