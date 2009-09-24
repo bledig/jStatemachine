@@ -71,6 +71,8 @@ public class Statemachine <ConcretContext extends Context>{
 		
 		log.info("handleEvent: "+currentState+" event="+event);
 		
+		processingState.clearGlobalEvents(); // evtl. alte globale Events löschen
+		
 		context.setProcessingState(processingState);
 		
 		// im Vorfeld alle Event-losen Transitionen abarbeiten
@@ -156,6 +158,18 @@ public class Statemachine <ConcretContext extends Context>{
 		deepCounter = 0;
 	}
 
+	
+	/**
+	 * liefert Liste der Events zur Weiterverarbeitung beim Aufrufenden
+	 * (also der Events, die nicht in der lokalen Statemachine verarbeitet werden sollen)
+	 * 
+	 * @return Liste
+	 */
+	public List<Object> getGlobalEvents() {
+		return processingState.getGlobalEvents();
+	}
+
+	
 
 	public PseudoState getCurrentState() {
 		return currentState;
