@@ -1,11 +1,9 @@
 package working_it.jStatemachine.domain;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,34 +94,47 @@ abstract public class StateGraph<ConcretContext extends Context> {
 		return transition;
 	}
 
+	
+	/**
+	 * Generate graphic presentation of the statechsrt as DOT-Description for Graphiv
+	 * @return String with Dot-Commands
+	 */
 	public String makeGraphiz() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("digraph JStateGraph {\n");
-		for (State state : stateMap.values()) {
-			sb.append("\t").append(state.getName());
-			if (!state.getEntryActions().isEmpty()
-					|| !state.getExitActions().isEmpty()) {
-				sb
-						.append(" [shape=box, style=rounded, label=<\n"
-								+ "\t\t<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\">\n"
-								+ "\t\t<TR><TD>" + state.getName()
-								+ "</TD></TR>\n");
-				for (Action<Context> action : state.getEntryActions()) {
-					sb.append("\t\t<TR><TD><FONT POINT-SIZE=\"9\">entry / "
-							+ action.getName() + "</FONT></TD></TR>\n");
+		for (PseudoState pstate : allStates) {
+			if (pstate instanceof State) {
+				State state = (State) pstate;
+				sb.append("\t").append(state.getName());
+				if (!state.getEntryActions().isEmpty()
+						|| !state.getExitActions().isEmpty()) {
+					sb
+							.append(" [shape=box, style=rounded, label=<\n"
+									+ "\t\t<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\">\n"
+									+ "\t\t<TR><TD>" + state.getName()
+									+ "</TD></TR>\n");
+					for (Action<Context> action : state.getEntryActions()) {
+						sb.append("\t\t<TR><TD><FONT POINT-SIZE=\"9\">entry / "
+								+ action.getName() + "</FONT></TD></TR>\n");
+					}
+					for (Action<Context> action : state.getExitActions()) {
+						sb.append("\t\t<TR><TD><FONT POINT-SIZE=\"9\">exit / "
+								+ action.getName() + "</FONT></TD></TR>\n");
+					}
+					sb.append("\t\t</TABLE>>]");
+					
+				} else if(state == initState) {
+					//sb.append(" [style=bold]");
+					sb.append(" [shape=circle, style=filled, fillcolor=black, height=0.2, width=0.2, label=\"\"]");
 				}
-				for (Action<Context> action : state.getExitActions()) {
-					sb.append("\t\t<TR><TD><FONT POINT-SIZE=\"9\">exit / "
-							+ action.getName() + "</FONT></TD></TR>\n");
-				}
-				sb.append("\t\t</TABLE>>]");
+				sb.append(";\n");
+			} else if (pstate instanceof Choice) {
+				Choice choice = (Choice) pstate;
+				sb.append("\t" + choice.getName()
+						+ " [shape=diamond, label=\"\"];\n");
+			} else {
+				throw new IllegalStateException("Unkwon Pseudostate-Instance "+pstate.getClass().getName());
 			}
-			sb.append(";\n");
-		}
-		sb.append("\n");
-		for (Choice choice : choiceMap.values()) {
-			sb.append("\t" + choice.getName()
-					+ " [shape=diamond, label=\"\"];\n");
 		}
 		sb.append("\n");
 		for (PseudoState state : allStates) {
