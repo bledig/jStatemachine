@@ -1,10 +1,6 @@
 package working_it.jStatemachine.processing;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.logging.Level;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,13 +15,13 @@ import working_it.jStatemachine.domain.Transition;
 /**
  * This Statemachine runs on concret Stategraph
  */
-public class Statemachine <ConcretContext extends Context>{
+public class Statemachine <CONTEXT extends Context, STATENAME extends Enum<?>>{
 
 	private static Log log = LogFactory.getLog(Statemachine.class);
 	
-	private final StateGraph<ConcretContext> stateGraph;
-	private PseudoState currentState;
-	private ConcretContext context;
+	private final StateGraph<CONTEXT, STATENAME> stateGraph;
+	private PseudoState<STATENAME> currentState;
+	private CONTEXT context;
 	private int deepCounter = 0;
 	private ProcessingState processingState = new ProcessingState();
 	
@@ -37,7 +33,7 @@ public class Statemachine <ConcretContext extends Context>{
 	 * @param context thr concrete context class for this machine
 	 * @param currentState the currentState, if this null, thenn initState of the graph is used.
 	 */
-	public Statemachine(StateGraph<ConcretContext> stateGraph, ConcretContext context, State currentState ) {
+	public Statemachine(StateGraph<CONTEXT, STATENAME> stateGraph, CONTEXT context, State<CONTEXT, STATENAME> currentState ) {
 		super();
 		this.stateGraph = stateGraph;
 		this.context = context;
@@ -54,7 +50,7 @@ public class Statemachine <ConcretContext extends Context>{
 	 * @param stateGraph the concrete StateGraph-Instance on this machine runs
 	 * @param context thr concrete context class for this machine
 	 */
-	public Statemachine(StateGraph<ConcretContext> stateGraph, ConcretContext context ) {
+	public Statemachine(StateGraph<CONTEXT, STATENAME> stateGraph, CONTEXT context ) {
 		this(stateGraph, context, null);
 	}
 	
@@ -95,7 +91,7 @@ public class Statemachine <ConcretContext extends Context>{
 		}
 		
 		boolean isFired = false;
-		for (Transition<ConcretContext> transition : currentState.getTransitions()) {
+		for (Transition<CONTEXT, STATENAME> transition : currentState.getTransitions()) {
 			
 			// Event checken
 			if(event==null && transition.getEvent()!=null) {
@@ -117,28 +113,28 @@ public class Statemachine <ConcretContext extends Context>{
 				continue;
 			
 			
-			PseudoState newState = transition.getToState();
+			PseudoState<STATENAME> newState = transition.getToState();
 			
 			log.info("transition '"+currentState+"' => '"+newState+"' fired");
 
-			if(newState!=currentState && currentState instanceof State){
+			if(newState!=currentState && currentState instanceof State<?,?>){
 				// dann exit-Actions auf current-state ausführen
-				State state = (State) currentState;
-				for (Action<ConcretContext> action : state.getExitActions()) {
+				State<CONTEXT, STATENAME> state = (State<CONTEXT, STATENAME>) currentState;
+				for (Action<CONTEXT> action : state.getExitActions()) {
 					log.debug("execute exit action: "+action);
 					action.execute(context);
 				}
 			}
 			if(transition.getActionList()!=null) {
-				for (Action<ConcretContext> action : transition.getActionList()) {
+				for (Action<CONTEXT> action : transition.getActionList()) {
 					log.debug("execute transition action: "+action);
 					action.execute(context);
 				}
 			}
-			if(newState!=currentState && newState instanceof State){
+			if(newState!=currentState && newState instanceof State<?,?>){
 				// dann entry-Actions auf new-state ausführen
-				State state = (State) newState;
-				for (Action<ConcretContext> action : state.getEntryActions()) {
+				State<CONTEXT, STATENAME> state = (State<CONTEXT, STATENAME>) newState;
+				for (Action<CONTEXT> action : state.getEntryActions()) {
 					log.debug("execute entry action: "+action);
 					action.execute(context);
 				}
@@ -171,20 +167,20 @@ public class Statemachine <ConcretContext extends Context>{
 
 	
 
-	public PseudoState getCurrentState() {
+	public PseudoState<STATENAME> getCurrentState() {
 		return currentState;
 	}
 
 
-	public void setCurrentState(State currentState) {
+	public void setCurrentState(State<CONTEXT, STATENAME> currentState) {
 		this.currentState = currentState;
 	}
 
-	public void setCurrentState(Enum currentStateName) {
+	public void setCurrentState(STATENAME currentStateName) {
 		this.currentState = stateGraph.getState(currentStateName);
 	}
 
-	public void setContext(ConcretContext context) {
+	public void setContext(CONTEXT context) {
 		this.context = context;
 	}
 

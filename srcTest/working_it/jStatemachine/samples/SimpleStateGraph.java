@@ -1,37 +1,30 @@
 package working_it.jStatemachine.samples;
 
+import static working_it.jStatemachine.samples.SimpleStates.*;
+
 import java.io.IOException;
 
 import working_it.jStatemachine.domain.Action;
-import working_it.jStatemachine.domain.Choice;
-import working_it.jStatemachine.domain.Context;
 import working_it.jStatemachine.domain.Guard;
-import working_it.jStatemachine.domain.State;
 import working_it.jStatemachine.domain.StateGraph;
-import working_it.jStatemachine.domain.Transition;
 import working_it.jStatemachine.processing.Statemachine;
 
-import static working_it.jStatemachine.samples.SimpleStates.*;
-import static working_it.jStatemachine.samples.SimpleChoices.*;
-
-public class SimpleStateGraph extends StateGraph<SimpleContext> {
+public class SimpleStateGraph extends StateGraph<SimpleContext, SimpleStates> {
 	
 	// same own guard-, action- and event-classes
 	
 	class CounterCheckGuard implements Guard<SimpleContext> {
-		@Override
 		public boolean validate(SimpleContext context) {
 			return context.counter < 3;
 		}
-		@Override public String getName() { return "counter<3"; }
+		public String getName() { return "counter<3"; }
 	}
 	
 	class CounterIncrement implements Action<SimpleContext> {
-		@Override
 		public void execute(SimpleContext context) {
 			context.counter++;
 		}
-		@Override public String getName() { return "++counter"; }
+		public String getName() { return "++counter"; }
 	}
 	
 	public static class CoolEvent {
@@ -93,7 +86,7 @@ public class SimpleStateGraph extends StateGraph<SimpleContext> {
 		graph.makeGraphizPng("srcTest");
 		
 		SimpleContext context = new SimpleContext();
-		Statemachine<SimpleContext> sm = new Statemachine<SimpleContext>(graph, context);
+		Statemachine<SimpleContext, SimpleStates> sm = new Statemachine<SimpleContext, SimpleStates>(graph, context);
 		sm.handleEvent("click");
 		sm.handleEvent("click");
 		sm.handleEvent("click");

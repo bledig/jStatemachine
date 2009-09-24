@@ -1,6 +1,3 @@
-/**
- * 
- */
 package working_it.jStatemachine.processing;
 
 import static org.junit.Assert.assertEquals;
@@ -22,7 +19,7 @@ public class StatemachineTest {
 
 	private static SimpleStateGraph stategraph;
 	private static SimpleContext context;
-	private static Statemachine<SimpleContext> sMachine;
+	private static Statemachine<SimpleContext, SimpleStates> sMachine;
 
 	/**
 	 * @throws java.lang.Exception
@@ -36,7 +33,7 @@ public class StatemachineTest {
 	@Before
 	public void setup(){
 		context = new SimpleContext();
-		sMachine = new Statemachine<SimpleContext>(stategraph, context);
+		sMachine = new Statemachine<SimpleContext, SimpleStates>(stategraph, context);
 	}
 
 

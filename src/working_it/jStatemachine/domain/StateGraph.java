@@ -13,15 +13,15 @@ import java.util.Map;
 /**
  * Base-Class to define a Stategraph
  */
-abstract public class StateGraph<ConcretContext extends Context> {
+abstract public class StateGraph<CONTEXT extends Context, STATENAME extends Enum<?>> {
 
-	private Map<Enum, State> stateMap = new HashMap<Enum, State>();
-	private Map<Enum, Choice> choiceMap = new HashMap<Enum, Choice>();
+	private Map<STATENAME, State<CONTEXT, STATENAME>> stateMap = new HashMap<STATENAME, State<CONTEXT, STATENAME>>();
+	private Map<STATENAME, Choice<STATENAME>> choiceMap = new HashMap<STATENAME, Choice<STATENAME>>();
 	
 	/** Liste aller PseudoStates um Reihenfolge des Anlegens zu behalten */
-	private List<PseudoState> allStates = new ArrayList<PseudoState>();
+	private List<PseudoState<STATENAME>> allStates = new ArrayList<PseudoState<STATENAME>>();
 	
-	private State initState;
+	private State<CONTEXT, STATENAME> initState;
 
 	/**
 	 * Get the state with specified name. If no state exist with this name, then
@@ -30,10 +30,10 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 * @param name
 	 * @return the State-Instance
 	 */
-	protected State state(Enum name) {
-		State state = stateMap.get(name);
+	protected State<CONTEXT, STATENAME> state(STATENAME name) {
+		State<CONTEXT, STATENAME> state = stateMap.get(name);
 		if (state == null) {
-			state = new State(name);
+			state = new State<CONTEXT, STATENAME>(name);
 			stateMap.put(name, state);
 			allStates.add(state);
 		}
@@ -47,10 +47,10 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 * @param name
 	 * @return the Choice-Instance
 	 */
-	protected Choice choice(Enum name) {
-		Choice choice = choiceMap.get(name);
+	protected Choice<STATENAME> choice(STATENAME name) {
+		Choice<STATENAME> choice = choiceMap.get(name);
 		if (choice == null) {
-			choice = new Choice(name);
+			choice = new Choice<STATENAME>(name);
 			choiceMap.put(name, choice);
 			allStates.add(choice);
 		}
@@ -62,7 +62,7 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 * 
 	 * @param name
 	 */
-	protected void setInitState(Enum name) {
+	protected void setInitState(STATENAME name) {
 		this.initState = state(name);
 	}
 
@@ -73,11 +73,9 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 *            the name of the state
 	 * @return the new created Transition
 	 */
-	protected Transition<ConcretContext> from(Enum statename) {
-		State state = state(statename);
-		Transition<ConcretContext> transition = new Transition<ConcretContext>(
-				this, state);
-		return transition;
+	protected Transition<CONTEXT, STATENAME> from(STATENAME statename) {
+		State<CONTEXT, STATENAME> state = state(statename);
+		return new Transition<CONTEXT, STATENAME>(this, state);
 	}
 
 	/**
@@ -87,11 +85,9 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 *            the name of the choice
 	 * @return the new created Transition
 	 */
-	protected Transition<ConcretContext> fromChoice(Enum choiceName) {
-		Choice choice = choice(choiceName);
-		Transition<ConcretContext> transition = new Transition<ConcretContext>(
-				this, choice);
-		return transition;
+	protected Transition<CONTEXT, STATENAME> fromChoice(STATENAME choiceName) {
+		Choice<STATENAME> choice = choice(choiceName);
+		return new Transition<CONTEXT, STATENAME>(this, choice);
 	}
 
 	
@@ -102,9 +98,9 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	public String makeGraphiz() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("digraph JStateGraph {\n");
-		for (PseudoState pstate : allStates) {
-			if (pstate instanceof State) {
-				State state = (State) pstate;
+		for (PseudoState<STATENAME> pstate : allStates) {
+			if (pstate instanceof State<?,?>) {
+				State<?,?> state = (State<?,?>) pstate;
 				sb.append("\t").append(state.getName());
 				if (!state.getEntryActions().isEmpty()
 						|| !state.getExitActions().isEmpty()) {
@@ -113,11 +109,11 @@ abstract public class StateGraph<ConcretContext extends Context> {
 									+ "\t\t<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\">\n"
 									+ "\t\t<TR><TD>" + state.getName()
 									+ "</TD></TR>\n");
-					for (Action<Context> action : state.getEntryActions()) {
+					for (Action<?> action : state.getEntryActions()) {
 						sb.append("\t\t<TR><TD><FONT POINT-SIZE=\"9\">entry / "
 								+ action.getName() + "</FONT></TD></TR>\n");
 					}
-					for (Action<Context> action : state.getExitActions()) {
+					for (Action<?> action : state.getExitActions()) {
 						sb.append("\t\t<TR><TD><FONT POINT-SIZE=\"9\">exit / "
 								+ action.getName() + "</FONT></TD></TR>\n");
 					}
@@ -128,8 +124,8 @@ abstract public class StateGraph<ConcretContext extends Context> {
 					sb.append(" [shape=circle, style=filled, fillcolor=black, height=0.2, width=0.2, label=\"\"]");
 				}
 				sb.append(";\n");
-			} else if (pstate instanceof Choice) {
-				Choice choice = (Choice) pstate;
+			} else if (pstate instanceof Choice<?>) {
+				Choice<?> choice = (Choice<?>) pstate;
 				sb.append("\t" + choice.getName()
 						+ " [shape=diamond, label=\"\"];\n");
 			} else {
@@ -137,7 +133,7 @@ abstract public class StateGraph<ConcretContext extends Context> {
 			}
 		}
 		sb.append("\n");
-		for (PseudoState state : allStates) {
+		for (PseudoState<STATENAME> state : allStates) {
 			makeGraphizTransition(sb, state);
 		}
 		sb.append("\n}\n");
@@ -148,12 +144,12 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 * @param sb
 	 * @param state
 	 */
-	private void makeGraphizTransition(StringBuffer sb, PseudoState state) {
-		for (Transition<Context> t : state.getTransitions()) {
+	private void makeGraphizTransition(StringBuffer sb, PseudoState<STATENAME> state) {
+		for (Transition<Context, STATENAME> t : state.getTransitions()) {
 			sb.append("\t" + t.getFromState().getName() + " -> "+ t.getToState().getName());
 			if (t.getEvent() != null
 					|| t.getGuard() != null
-					|| t.getFromState() instanceof Choice
+					|| t.getFromState() instanceof Choice<?>
 					|| (t.getActionList() != null && !t.getActionList().isEmpty())) {
 
 				sb.append("[fontsize=\"9\", label=\"");
@@ -163,7 +159,7 @@ abstract public class StateGraph<ConcretContext extends Context> {
 					if(t.hasSimpleEvent()) {
 						sb.append(t.getEvent());
 					} else {
-						String n =  ((Class)t.getEvent()).getSimpleName();
+						String n =  ((Class<?>)t.getEvent()).getSimpleName();
 						if(n.startsWith("Event"))
 							n = n.replaceFirst("Event", "");
 						sb.append(n);
@@ -173,14 +169,14 @@ abstract public class StateGraph<ConcretContext extends Context> {
 				// Guard
 				if (t.getGuard() != null)
 					sb.append(" [" + t.getGuard().getName() + "]");
-				else if (t.getFromState() instanceof Choice)
+				else if (t.getFromState() instanceof Choice<?>)
 					sb.append("[else]");
 				
 				// Action
 				if (t.getActionList() != null
 						&& !t.getActionList().isEmpty()) {
 					boolean first = true;
-					for (Action action : t.getActionList()) {
+					for (Action<?> action : t.getActionList()) {
 						if (first) {
 							first = false;
 							sb.append(" / " + action.getName());
@@ -265,7 +261,7 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 * @param name
 	 * @return the State-Instance or NULL if not exist
 	 */
-	public State getState(Enum name) {
+	public State<CONTEXT, STATENAME> getState(STATENAME name) {
 		return stateMap.get(name);
 	}
 
@@ -274,7 +270,7 @@ abstract public class StateGraph<ConcretContext extends Context> {
 	 * 
 	 * @return the State-Instance or NULL if not set
 	 */
-	public State getInitState() {
+	public State<CONTEXT, STATENAME> getInitState() {
 		return initState;
 	}
 

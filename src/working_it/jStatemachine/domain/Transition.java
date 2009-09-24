@@ -1,26 +1,21 @@
-/**
- * 
- */
 package working_it.jStatemachine.domain;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import working_it.jStatemachine.samples.SimpleContext;
 
 
 /**
  * This Class represents a State-Transition from a state to a other state
  * optionaly guarded with a Guard and Actions 
  */
-public class Transition<ConcretContext extends Context> {
+public class Transition<CONTEXT extends Context, STATENAME extends Enum<?>> {
 	
-	private PseudoState fromState;
-	private PseudoState toState;
+	private PseudoState<STATENAME> fromState;
+	private PseudoState<STATENAME> toState;
 	private Object event;
-	private Guard<ConcretContext> guard;
-	private List<Action<ConcretContext>> actionList;
-	private StateGraph<ConcretContext> stategraph;
+	private Guard<CONTEXT> guard;
+	private List<Action<CONTEXT>> actionList;
+	private StateGraph<CONTEXT, STATENAME> stategraph;
 	
 
 	/**
@@ -28,7 +23,7 @@ public class Transition<ConcretContext extends Context> {
 	 * @param stategraph	the stategraph
 	 * @param from 			the from-State
 	 */
-	public Transition(StateGraph<ConcretContext> stategraph, PseudoState from) {
+	public Transition(StateGraph<CONTEXT, STATENAME> stategraph, PseudoState<STATENAME> from) {
 		super();
 		this.stategraph = stategraph;
 		this.fromState = from;
@@ -42,7 +37,7 @@ public class Transition<ConcretContext extends Context> {
 	 * @param stateName	the name of the to-State
 	 * @return			self
 	 */
-	public Transition<ConcretContext> to(Enum stateName) {
+	public Transition<CONTEXT, STATENAME> to(STATENAME stateName) {
 		if(toState!=null)
 			throw new IllegalStateException("toState already defined!");
 		toState = stategraph.state(stateName);
@@ -55,7 +50,7 @@ public class Transition<ConcretContext extends Context> {
 	 * @param choiceName	the name of the to-Choice
 	 * @return			self
 	 */
-	public Transition<ConcretContext> toChoice(Enum choiceName) {
+	public Transition<CONTEXT, STATENAME> toChoice(STATENAME choiceName) {
 		if(toState!=null)
 			throw new IllegalStateException("toState already defined!");
 		toState = stategraph.choice(choiceName);
@@ -69,11 +64,11 @@ public class Transition<ConcretContext extends Context> {
 	 * @param event	the event-Object
 	 * @return self
 	 */
-	public Transition<ConcretContext> onEvent(Object event) {
+	public Transition<CONTEXT, STATENAME> onEvent(Object event) {
 		if(this.event!=null)
 			throw new IllegalStateException("Event already defined!");
 		this.event = event;
-		if(!hasSimpleEvent() && !(event instanceof Class))
+		if(!hasSimpleEvent() && !(event instanceof Class<?>))
 			throw new IllegalStateException("Event is not a String, Enum or Class!");
 		return this;
 	}
@@ -84,7 +79,7 @@ public class Transition<ConcretContext extends Context> {
 	 * @param guard a Guard-Implemetion-Instance
 	 * @return self
 	 */
-	public Transition<ConcretContext> guard(Guard<ConcretContext> guard) {
+	public Transition<CONTEXT, STATENAME> guard(Guard<CONTEXT> guard) {
 		if(this.guard!=null)
 			throw new IllegalStateException("Guard already defined!");
 		this.guard = guard;
@@ -100,14 +95,14 @@ public class Transition<ConcretContext extends Context> {
 	 *  
 	 * @return self
 	 */
-	public Transition<ConcretContext> guardElse() {
+	public Transition<CONTEXT, STATENAME> guardElse() {
 		if(this.guard!=null)
 			throw new IllegalStateException("Guard already defined!");
-		if( ! (fromState instanceof Choice) )
+		if( ! (fromState instanceof Choice<?>) )
 			throw new IllegalStateException("Else-Guard only allowed for Choices!");
 		// Testen ob mindestens eine vorherige Transition mit guard existiert
 		boolean hasGuardTransition = false;
-		for (Transition<Context> transition : fromState.getTransitions()) {
+		for (Transition<Context, STATENAME> transition : fromState.getTransitions()) {
 			if(transition.guard!=null) {
 				hasGuardTransition = true;
 				break;
@@ -125,9 +120,9 @@ public class Transition<ConcretContext extends Context> {
 	 * @param action a Action-Implementation-Instance
 	 * @return self
 	 */
-	public Transition<ConcretContext> withAction(Action<ConcretContext> action) {
+	public Transition<CONTEXT, STATENAME> withAction(Action<CONTEXT> action) {
 		if(actionList==null)
-			actionList = new ArrayList<Action<ConcretContext>>();
+			actionList = new ArrayList<Action<CONTEXT>>();
 		actionList.add(action);
 		return this;
 	}
@@ -138,15 +133,15 @@ public class Transition<ConcretContext extends Context> {
 	 * @return 
 	 */
 	public boolean hasSimpleEvent() {
-		return (event instanceof Enum) || (event instanceof String);
+		return (event instanceof Enum<?>) || (event instanceof String);
 	}
 
 
-	public PseudoState getFromState() {
+	public PseudoState<STATENAME> getFromState() {
 		return fromState;
 	}
 
-	public PseudoState getToState() {
+	public PseudoState<STATENAME> getToState() {
 		return toState;
 	}
 
@@ -154,11 +149,11 @@ public class Transition<ConcretContext extends Context> {
 		return event;
 	}
 
-	public Guard<ConcretContext> getGuard() {
+	public Guard<CONTEXT> getGuard() {
 		return guard;
 	}
 
-	public List<Action<ConcretContext>> getActionList() {
+	public List<Action<CONTEXT>> getActionList() {
 		return actionList;
 	}
 

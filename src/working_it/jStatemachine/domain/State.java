@@ -10,17 +10,17 @@ import java.util.List;
 /**
  * The State of a Stategraph
  */
-public class State extends PseudoState {
+public class State<CONTEXT extends Context, STATENAME extends Enum<?>> extends PseudoState<STATENAME> {
 	
 
-	private List<Action> entryActions = new ArrayList<Action>();
-	private List<Action> exitActions = new ArrayList<Action>();
+	private List<Action<CONTEXT>> entryActions = new ArrayList<Action<CONTEXT>>();
+	private List<Action<CONTEXT>> exitActions = new ArrayList<Action<CONTEXT>>();
 
 	/**
 	 * Constructor
 	 * @param name	uniq name
 	 */
-	public State(Enum name) {
+	public State(STATENAME name) {
 		super(name);
 	}
 
@@ -29,11 +29,10 @@ public class State extends PseudoState {
 	 * Add a Action to the entryActions-List.
 	 * This Actions are called, when enter this state 
 	 * 
-	 * @param <ConcretContext>	the concret context class
 	 * @param entryAction		the Action
 	 * @return self
 	 */
-	public <ConcretContext extends Context> State addEntryAction(Action<ConcretContext> entryAction){
+	public State<CONTEXT, STATENAME> addEntryAction(Action<CONTEXT> entryAction){
 		entryActions.add(entryAction);
 		return this;
 	}
@@ -43,22 +42,21 @@ public class State extends PseudoState {
 	 * Add a Action to the exitActions-List.
 	 * This Actions are called, when exit this state 
 	 * 
-	 * @param <ConcretContext>	the concret context class
 	 * @param exitAction		the Action
 	 * @return self
 	 */
-	public <ConcretContext extends Context> State addExitAction(Action<ConcretContext> exitAction){
+	public State<CONTEXT, STATENAME> addExitAction(Action<CONTEXT> exitAction){
 		exitActions.add(exitAction);
 		return this;
 	}
 
 	
-	public List<Action> getEntryActions() {
+	public List<Action<CONTEXT>> getEntryActions() {
 		return entryActions;
 	}
 
 
-	public List<Action> getExitActions() {
+	public List<Action<CONTEXT>> getExitActions() {
 		return exitActions;
 	}
 	
